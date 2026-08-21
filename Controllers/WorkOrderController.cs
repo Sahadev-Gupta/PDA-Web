@@ -16,13 +16,13 @@ public class WorkOrderController(IWorkOrderRepository workOrderRepository, IWork
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        return Ok(workOrderRepository.GetAll());
+        return Ok(await workOrderRepository.GetAll());
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = workOrderRepository.GetById(id);
+        var result = await workOrderRepository.GetById(id);
         var response = new ApiResponse<WorkOrderResponse>();
         if (result == null)
         {
@@ -39,7 +39,7 @@ public class WorkOrderController(IWorkOrderRepository workOrderRepository, IWork
     [HttpPost("Create")]
     public async Task<IActionResult> Create([FromBody] WorkOrderCreateRequest request)
     {
-        var index = workOrderRepository.Create(request);
+        var index = await workOrderRepository.Create(request);
         var response = new ApiResponse<WorkOrderResponse>();
         if (index!=null && index > 0)
         {
@@ -60,7 +60,7 @@ public class WorkOrderController(IWorkOrderRepository workOrderRepository, IWork
     [HttpPut("Update/{id}")]
     public async Task<IActionResult> Update(int id, WorkOrderUpdateRequest request)
     {
-        var order = workOrderRepository.GetById(id);
+        var order = await workOrderRepository.GetById(id);
         var response = new ApiResponse<WorkOrderResponse>();
         if (order == null)
         {
@@ -98,7 +98,7 @@ public class WorkOrderController(IWorkOrderRepository workOrderRepository, IWork
     [HttpDelete("Delete")]
     public async Task<IActionResult> DeleteById(int id) 
     { 
-        var result = workOrderRepository.Delete(id);
+        var result = await workOrderRepository.Delete(id);
         var response = new ApiResponse<WorkOrderResponse>();
         if (result)
         {

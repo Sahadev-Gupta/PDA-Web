@@ -1,32 +1,43 @@
-﻿using WebApplication1.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Interfaces;
 using WebApplication1.Models;
+using WebApplication1.Models.Data;
 using WebApplication1.Models.Enums;
 using WebApplication1.Models.Request;
 using WebApplication1.Models.Response;
 
 namespace WebApplication1.Repositories;
 
-public class WorkOrderRepository(ILogger<WorkOrderRepository> logger) : IWorkOrderRepository
+public class WorkOrderRepository(ILogger<WorkOrderRepository> logger, AppDbContext dbContext) : IWorkOrderRepository
 {
     private readonly List<WorkOrder> _workOrders = new();
 
     private int _id = 1;
 
-    public IEnumerable<WorkOrderResponse> GetAll()
+    public async Task<List<WorkOrderResponse>> GetAll()
     {
-        return _workOrders
-            .Select(wo => MapToResponse(wo));
+        //return _workOrders
+        //    .Select(wo => MapToResponse(wo));
+
+        return await dbContext.WorkOrders
+                              .AsNoTracking()
+                              .Select(wo => MapToResponse(wo))
+                              .ToListAsync();
     }
 
-    public WorkOrderResponse GetById(int id)
+    public async Task<WorkOrderResponse> GetById(int id)
     {
-        WorkOrder? workOrder =  _workOrders
-            .FirstOrDefault(wo => wo.Id == id);
+        WorkOrder? workOrder = await dbContext.WorkOrders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(wo => wo.Id == id);
+
+        //WorkOrder? workOrder =  _workOrders
+        //    .FirstOrDefault(wo => wo.Id == id);
 
         return MapToResponse(workOrder!);
     }
 
-    public int? Create(WorkOrderCreateRequest request)
+    public async Task<int?> Create(WorkOrderCreateRequest request)
     {
         try
         {
@@ -42,6 +53,8 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger) : IWorkOrd
                 Id = _id
             };
             _workOrders.Add(workOrder);
+            dbContext.WorkOrders.Add(workOrder);
+            await dbContext.SaveChangesAsync();
             _id++;
 
             MapToResponse(workOrder);
@@ -54,12 +67,17 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger) : IWorkOrd
         }
     }
 
-    public bool Delete(int id)
+    public async Task<bool> Delete(int id)
     {
-        var workOrder = _workOrders.FirstOrDefault(wo => wo.Id == id);
+        WorkOrder? workOrder = await dbContext.WorkOrders
+            .FirstOrDefaultAsync(wo => wo.Id == id);
+
+        //var workOrder = _workOrders.FirstOrDefault(wo => wo.Id == id);
         if (workOrder != null)
         {
             _workOrders.Remove(workOrder);
+            dbContext.WorkOrders.Remove(workOrder);
+            dbContext.SaveChanges();
             return true;
         }
         return false;

@@ -5,8 +5,8 @@ namespace WebApplication1.Interfaces;
 
 public interface IWorkOrderRepository
 {
-    int? Create(WorkOrderCreateRequest request);
-    IEnumerable<WorkOrderResponse> GetAll();
-    WorkOrderResponse GetById(int id);
-    bool Delete(int id);
+    Task<int?> Create(WorkOrderCreateRequest request);
+    Task<List<WorkOrderResponse>> GetAll();
+    Task<WorkOrderResponse> GetById(int id);
+    Task<bool> Delete(int id);
 }
