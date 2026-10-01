@@ -8,7 +8,9 @@ using WebApplication1.Models.Response;
 
 namespace WebApplication1.Repositories;
 
-public class WorkOrderRepository(ILogger<WorkOrderRepository> logger, AppDbContext dbContext) : IWorkOrderRepository
+public class WorkOrderRepository(ILogger<WorkOrderRepository> logger,
+    AppDbContext dbContext,
+    EncryptedAppDbContext? encryptedDbContext = null) : IWorkOrderRepository
 {
     private readonly List<WorkOrder> _workOrders = new();
 
@@ -16,25 +18,19 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger, AppDbConte
 
     public async Task<List<WorkOrderResponse>> GetAll()
     {
-        //return _workOrders
-        //    .Select(wo => MapToResponse(wo));
-
         return await dbContext.WorkOrders
                               .AsNoTracking()
                               .Select(wo => MapToResponse(wo))
                               .ToListAsync();
     }
 
-    public async Task<WorkOrderResponse> GetById(int id)
+    public async Task<WorkOrderResponse?> GetById(int id)
     {
         WorkOrder? workOrder = await dbContext.WorkOrders
             .AsNoTracking()
             .FirstOrDefaultAsync(wo => wo.Id == id);
 
-        //WorkOrder? workOrder =  _workOrders
-        //    .FirstOrDefault(wo => wo.Id == id);
-
-        return MapToResponse(workOrder!);
+        return workOrder is null ? null : MapToResponse(workOrder);
     }
 
     public async Task<int?> Create(WorkOrderCreateRequest request)
@@ -55,9 +51,14 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger, AppDbConte
             _workOrders.Add(workOrder);
             dbContext.WorkOrders.Add(workOrder);
             await dbContext.SaveChangesAsync();
-            _id++;
 
-            MapToResponse(workOrder);
+            if (encryptedDbContext is not null)
+            {
+                encryptedDbContext.WorkOrders.Add(workOrder);
+                await encryptedDbContext.SaveChangesAsync();
+            }
+
+            _id++;
             return workOrder.Id;
         }
         catch (Exception exception)
@@ -72,12 +73,24 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger, AppDbConte
         WorkOrder? workOrder = await dbContext.WorkOrders
             .FirstOrDefaultAsync(wo => wo.Id == id);
 
-        //var workOrder = _workOrders.FirstOrDefault(wo => wo.Id == id);
         if (workOrder != null)
         {
             _workOrders.Remove(workOrder);
             dbContext.WorkOrders.Remove(workOrder);
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
+
+            if (encryptedDbContext is not null)
+            {
+                var encryptedWorkOrder = await encryptedDbContext.WorkOrders
+                    .FirstOrDefaultAsync(wo => wo.Id == id);
+
+                if (encryptedWorkOrder is not null)
+                {
+                    encryptedDbContext.WorkOrders.Remove(encryptedWorkOrder);
+                    await encryptedDbContext.SaveChangesAsync();
+                }
+            }
+
             return true;
         }
         return false;

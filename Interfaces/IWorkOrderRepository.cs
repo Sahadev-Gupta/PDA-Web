@@ -7,6 +7,6 @@ public interface IWorkOrderRepository
 {
     Task<int?> Create(WorkOrderCreateRequest request);
     Task<List<WorkOrderResponse>> GetAll();
-    Task<WorkOrderResponse> GetById(int id);
+    Task<WorkOrderResponse?> GetById(int id);
     Task<bool> Delete(int id);
 }
