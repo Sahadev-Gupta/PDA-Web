@@ -52,11 +52,11 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger,
             dbContext.WorkOrders.Add(workOrder);
             await dbContext.SaveChangesAsync();
 
-            if (encryptedDbContext is not null)
-            {
-                encryptedDbContext.WorkOrders.Add(workOrder);
-                await encryptedDbContext.SaveChangesAsync();
-            }
+            //if (encryptedDbContext is not null)
+            //{
+            //    encryptedDbContext.WorkOrders.Add(workOrder);
+            //    await encryptedDbContext.SaveChangesAsync();
+            //}
 
             _id++;
             return workOrder.Id;
@@ -79,17 +79,17 @@ public class WorkOrderRepository(ILogger<WorkOrderRepository> logger,
             dbContext.WorkOrders.Remove(workOrder);
             await dbContext.SaveChangesAsync();
 
-            if (encryptedDbContext is not null)
-            {
-                var encryptedWorkOrder = await encryptedDbContext.WorkOrders
-                    .FirstOrDefaultAsync(wo => wo.Id == id);
+            //if (encryptedDbContext is not null)
+            //{
+            //    var encryptedWorkOrder = await encryptedDbContext.WorkOrders
+            //        .FirstOrDefaultAsync(wo => wo.Id == id);
 
-                if (encryptedWorkOrder is not null)
-                {
-                    encryptedDbContext.WorkOrders.Remove(encryptedWorkOrder);
-                    await encryptedDbContext.SaveChangesAsync();
-                }
-            }
+            //    if (encryptedWorkOrder is not null)
+            //    {
+            //        encryptedDbContext.WorkOrders.Remove(encryptedWorkOrder);
+            //        await encryptedDbContext.SaveChangesAsync();
+            //    }
+            //}
 
             return true;
         }

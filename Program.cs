@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
 using Microsoft.OpenApi;
 using WebApplication1.Interfaces;
 using WebApplication1.Models.Data;
@@ -8,6 +10,7 @@ using WebApplication1.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 SQLitePCL.Batteries_V2.Init();
+
 
 const string localDbPassword = "Passw0rd1234!!";
 
@@ -23,6 +26,9 @@ var encryptedSqliteConnectionString = new SqliteConnectionStringBuilder(encrypte
 }.ToString();
 
 // Add services to the container.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 // Learn about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -32,16 +38,23 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddDbContext<EncryptedAppDbContext>(options =>
-{
-    options.UseSqlite(encryptedSqliteConnectionString);
-});
+//builder.Services.AddDbContext<EncryptedAppDbContext>(options =>
+//{
+//    options.UseSqlite(encryptedSqliteConnectionString);
+//});
 
 
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Work Order" , Version = "v1" });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Bearer {token}"
+    });
 });
 
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
@@ -65,7 +78,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

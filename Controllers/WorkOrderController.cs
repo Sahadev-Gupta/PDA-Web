@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Interfaces;
 using WebApplication1.Models;
@@ -36,6 +37,7 @@ public class WorkOrderController(IWorkOrderRepository workOrderRepository, IWork
         return Ok(response);
     }
 
+    [Authorize]
     [HttpPost("Create")]
     public async Task<IActionResult> Create([FromBody] WorkOrderCreateRequest request)
     {
